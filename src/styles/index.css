@@ -342,14 +342,20 @@ a:hover { color: var(--acento-b); }
   overflow: hidden;
 }
 .detalle__media {
-  background: var(--superficie-2);
+  background: #fff; /* las fotos de producto tienen fondo blanco */
   height: 100%;
   min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
 }
 .detalle__media img {
-  width: 100%; height: 100%;
-  object-fit: cover;
+  display: block;
+  width: 100%;
+  height: auto;
   max-height: 520px;
+  object-fit: contain; /* se ve la foto entera, sin recortes */
 }
 .detalle__cuerpo { padding: clamp(1.5rem, 4vw, 2.5rem); }
 .detalle__titulo { font-size: clamp(1.5rem, 3vw, 2.1rem); }
