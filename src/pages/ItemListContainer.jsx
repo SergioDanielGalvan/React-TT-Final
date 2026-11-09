@@ -1,67 +1,83 @@
-import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { Form, InputGroup, Pagination, Button } from 'react-bootstrap'
+import { FaSearch, FaTimes } from 'react-icons/fa'
 import ItemList from '../components/ItemList.jsx'
 import { Cargando, ErrorCarga } from '../components/Estado.jsx'
-import { RUTA_PRODUCTOS } from '../utils/api.js'
-import { aplicarCambios } from '../utils/catalogo.js'
+import Seo from '../components/Seo.jsx'
+import { useProductos } from '../hooks/useProductos.js'
+
+const POR_PAGINA = 8
+
+/** Normaliza para buscar sin importar mayúsculas ni tildes. */
+const normalizar = (texto) =>
+  texto
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
 
 /**
- * Contenedor del catálogo: trae los productos de productos.json con
- * fetch dentro de un useEffect, maneja carga y error, y delega el
- * dibujo en <ItemList /> → <Item />.
+ * Contenedor del catálogo: trae los productos de Firestore (useProductos),
+ * maneja carga y error, y delega el dibujo en <ItemList /> → <Item />.
  *
- * - En /productos muestra el catálogo completo con filtro por categoría
- *   (?categoria=... en la URL, así el filtro se puede compartir).
+ * - En /productos: búsqueda en tiempo real (?q=), filtro por categoría
+ *   (?categoria=) y paginador (?pagina=). Todo vive en la URL, así una
+ *   búsqueda se puede compartir o volver atrás con el navegador.
  * - En la Home se usa con soloDestacados para la fila de destacados.
  */
 function ItemListContainer({ soloDestacados = false }) {
-  const [productos, setProductos] = useState([])
-  const [cargando, setCargando] = useState(true)
-  const [error, setError] = useState(null)
-  const [intento, setIntento] = useState(0)
+  const { productos, cargando, error, recargar } = useProductos()
   const [params, setParams] = useSearchParams()
 
   const categoria = soloDestacados ? null : params.get('categoria')
+  const busqueda = soloDestacados ? '' : (params.get('q') ?? '')
+  const paginaPedida = Number(params.get('pagina')) || 1
 
-  useEffect(() => {
-    const controller = new AbortController()
-
-    const cargar = async () => {
-      setCargando(true)
-      setError(null)
-      try {
-        const respuesta = await fetch(RUTA_PRODUCTOS, { signal: controller.signal })
-        if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`)
-        const datos = await respuesta.json()
-        // Aplica altas, ediciones y bajas hechas desde el panel de administración
-        setProductos(aplicarCambios(datos))
-      } catch (err) {
-        if (err.name !== 'AbortError') setError('No se pudieron cargar los productos.')
-      } finally {
-        if (!controller.signal.aborted) setCargando(false)
-      }
-    }
-
-    cargar()
-    // Si el componente se desmonta antes de terminar, cancelamos el pedido.
-    return () => controller.abort()
-  }, [intento])
+  // Cambia un parámetro de la URL; al buscar o filtrar se vuelve a la página 1.
+  const actualizar = (cambios) => {
+    const nuevos = new URLSearchParams(params)
+    Object.entries(cambios).forEach(([k, v]) => (v ? nuevos.set(k, v) : nuevos.delete(k)))
+    if (!('pagina' in cambios)) nuevos.delete('pagina')
+    setParams(nuevos, { replace: 'q' in cambios }) // no llena el historial con cada tecla
+  }
 
   const categorias = [...new Set(productos.map((p) => p.categoria))]
 
   let visibles = productos
-  if (soloDestacados) visibles = productos.filter((p) => p.destacado)
-  else if (categoria) visibles = productos.filter((p) => p.categoria === categoria)
+  if (soloDestacados) {
+    visibles = productos.filter((p) => p.destacado)
+  } else {
+    if (categoria) visibles = visibles.filter((p) => p.categoria === categoria)
+    const termino = normalizar(busqueda.trim())
+    if (termino) {
+      visibles = visibles.filter((p) =>
+        normalizar(`${p.titulo} ${p.categoria} ${(p.specs ?? []).join(' ')}`).includes(termino),
+      )
+    }
+  }
+
+  const totalPaginas = Math.max(1, Math.ceil(visibles.length / POR_PAGINA))
+  const pagina = Math.min(Math.max(1, paginaPedida), totalPaginas)
+  const deLaPagina = soloDestacados ? visibles : visibles.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA)
+
+  const irAPagina = (n) => {
+    actualizar({ pagina: n > 1 ? String(n) : null })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   const contenido = cargando ? (
     <Cargando texto={soloDestacados ? 'Cargando destacados…' : 'Cargando productos…'} />
   ) : error ? (
-    <ErrorCarga mensaje={error} onReintentar={() => setIntento((n) => n + 1)} />
+    <ErrorCarga mensaje={error} onReintentar={recargar} />
   ) : (
     <ItemList
-      productos={visibles}
-      columnas={soloDestacados ? 'col-12 col-sm-6 col-lg-4' : undefined}
+      productos={deLaPagina}
+      columnas={soloDestacados ? { xs: 12, sm: 6, lg: 4 } : undefined}
       marcarDestacados={!soloDestacados}
+      vacio={
+        productos.length === 0
+          ? 'Todavía no hay productos cargados en el catálogo.'
+          : `No encontramos productos para "${busqueda}"${categoria ? ` en ${categoria}` : ''}.`
+      }
     />
   )
 
@@ -70,34 +86,78 @@ function ItemListContainer({ soloDestacados = false }) {
 
   return (
     <section className="seccion">
+      <Seo
+        titulo={categoria ?? 'Productos'}
+        descripcion={`Catálogo de Mundo Gaming${categoria ? `: ${categoria}` : ''}. Placas madre, tarjetas de video y gabinetes.`}
+      />
       <div className="container">
         <span className="seccion__eyebrow">Catálogo</span>
         <h1 className="seccion__titulo">{categoria ?? 'Todos los productos'}</h1>
-        <p className="text-suave mb-4">
-          Elegí un producto para ver su detalle y agregarlo al carrito.
-        </p>
+        <p className="text-suave mb-4">Elegí un producto para ver su detalle y agregarlo al carrito.</p>
 
-        {!cargando && !error && (
-          <div className="filtros" role="group" aria-label="Filtrar por categoría">
-            <button
-              className={`btn btn-sm btn-borde ${!categoria ? 'active' : ''}`}
-              onClick={() => setParams({})}
-            >
-              Todos ({productos.length})
-            </button>
-            {categorias.map((c) => (
+        {!cargando && !error && productos.length > 0 && (
+          <>
+            {/* Búsqueda en tiempo real: filtra con cada tecla */}
+            <InputGroup className="buscador mb-3" role="search">
+              <InputGroup.Text>
+                <FaSearch aria-hidden="true" />
+              </InputGroup.Text>
+              <Form.Control
+                type="search"
+                placeholder="Buscar por nombre, categoría o característica…"
+                value={busqueda}
+                onChange={(e) => actualizar({ q: e.target.value })}
+                aria-label="Buscar productos"
+              />
+              {busqueda && (
+                <Button variant="outline-secondary" onClick={() => actualizar({ q: null })} aria-label="Limpiar búsqueda">
+                  <FaTimes aria-hidden="true" />
+                </Button>
+              )}
+            </InputGroup>
+
+            <div className="filtros" role="group" aria-label="Filtrar por categoría">
               <button
-                key={c}
-                className={`btn btn-sm btn-borde ${categoria === c ? 'active' : ''}`}
-                onClick={() => setParams({ categoria: c })}
+                className={`btn btn-sm btn-borde ${!categoria ? 'active' : ''}`}
+                onClick={() => actualizar({ categoria: null })}
               >
-                {c} ({productos.filter((p) => p.categoria === c).length})
+                Todos ({productos.length})
               </button>
-            ))}
-          </div>
+              {categorias.map((c) => (
+                <button
+                  key={c}
+                  className={`btn btn-sm btn-borde ${categoria === c ? 'active' : ''}`}
+                  onClick={() => actualizar({ categoria: c })}
+                >
+                  {c} ({productos.filter((p) => p.categoria === c).length})
+                </button>
+              ))}
+            </div>
+
+            <p className="text-suave small mb-3" aria-live="polite">
+              {visibles.length === 1 ? '1 producto' : `${visibles.length} productos`}
+              {totalPaginas > 1 && ` · página ${pagina} de ${totalPaginas}`}
+            </p>
+          </>
         )}
 
         {contenido}
+
+        {!cargando && !error && totalPaginas > 1 && (
+          <Pagination className="mg-paginador justify-content-center mt-4" aria-label="Paginación del catálogo">
+            <Pagination.Prev disabled={pagina === 1} onClick={() => irAPagina(pagina - 1)} aria-label="Página anterior" />
+            {Array.from({ length: totalPaginas }, (_, i) => i + 1).map((n) => (
+              <Pagination.Item key={n} active={n === pagina} onClick={() => irAPagina(n)}>
+                {n}
+              </Pagination.Item>
+            ))}
+            <Pagination.Next
+              disabled={pagina === totalPaginas}
+              onClick={() => irAPagina(pagina + 1)}
+              aria-label="Página siguiente"
+            />
+          </Pagination>
+        )}
       </div>
     </section>
   )

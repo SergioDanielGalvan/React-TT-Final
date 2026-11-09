@@ -1,93 +1,100 @@
 import { useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { Container, Nav, Navbar, NavDropdown } from 'react-bootstrap'
+import { FaBoxOpen, FaEnvelope, FaHome, FaSignInAlt, FaSignOutAlt, FaTools, FaUserCircle } from 'react-icons/fa'
 import CartWidget from '../CartWidget.jsx'
 import DolarWidget from '../DolarWidget.jsx'
 import ThemeToggle from '../ThemeToggle.jsx'
 import { useAuth } from '../../hooks/useAuth.js'
 
 const SECCIONES = [
-  { to: '/', texto: 'Inicio', end: true },
-  { to: '/productos', texto: 'Productos' },
-  { to: '/contacto', texto: 'Contacto' },
+  { to: '/', texto: 'Inicio', icono: FaHome, end: true },
+  { to: '/productos', texto: 'Productos', icono: FaBoxOpen },
+  { to: '/contacto', texto: 'Contacto', icono: FaEnvelope },
 ]
 
+/** Barra de navegación con React-Bootstrap (Navbar colapsable en celular). */
 function NavBar() {
-  // El menú hamburguesa se controla con estado de React (sin el JS de Bootstrap)
   const [abierto, setAbierto] = useState(false)
   const { usuario, esAdmin, logout } = useAuth()
   const navigate = useNavigate()
 
   const cerrar = () => setAbierto(false)
 
-  const cerrarSesion = () => {
-    logout()
+  const cerrarSesion = async () => {
     cerrar()
+    await logout()
     navigate('/')
   }
 
   return (
-    <nav className="navbar navbar-expand-lg mg-nav" aria-label="Navegación principal">
-      <div className="container">
-        <Link className="navbar-brand marca d-flex align-items-center gap-2" to="/" onClick={cerrar}>
+    <Navbar expand="lg" expanded={abierto} onToggle={setAbierto} className="mg-nav" aria-label="Navegación principal">
+      <Container>
+        <Navbar.Brand as={Link} to="/" className="marca d-flex align-items-center gap-2" onClick={cerrar}>
           <img src="/imagenes/logo-mg.svg" alt="" width="36" height="26" />
           <span>Mundo Gaming</span>
-        </Link>
+        </Navbar.Brand>
 
         <div className="d-flex align-items-center gap-3 order-lg-last">
           <CartWidget onClick={cerrar} />
-          <button
-            className="navbar-toggler"
-            type="button"
-            aria-controls="menuPrincipal"
-            aria-expanded={abierto}
-            aria-label={abierto ? 'Cerrar menú' : 'Abrir menú'}
-            onClick={() => setAbierto(!abierto)}
-          >
-            {abierto ? '✕' : '☰'}
-          </button>
+          <Navbar.Toggle aria-controls="menuPrincipal" aria-label={abierto ? 'Cerrar menú' : 'Abrir menú'} />
         </div>
 
-        <div className={`collapse navbar-collapse ${abierto ? 'show' : ''}`} id="menuPrincipal">
-          <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-            {SECCIONES.map((s) => (
-              <li className="nav-item" key={s.to}>
-                {/* NavLink agrega la clase "active" a la sección actual */}
-                <NavLink className="nav-link" to={s.to} end={s.end} onClick={cerrar}>
-                  {s.texto}
-                </NavLink>
-              </li>
+        <Navbar.Collapse id="menuPrincipal">
+          <Nav className="me-auto mb-2 mb-lg-0">
+            {SECCIONES.map(({ to, texto, icono: Icono, end }) => (
+              // NavLink agrega la clase "active" a la sección actual
+              <Nav.Link as={NavLink} key={to} to={to} end={end} onClick={cerrar}>
+                <Icono className="me-1 d-lg-none" aria-hidden="true" />
+                {texto}
+              </Nav.Link>
             ))}
             {esAdmin && (
-              <li className="nav-item">
-                <NavLink className="nav-link" to="/admin/productos" onClick={cerrar}>
-                  Admin
-                </NavLink>
-              </li>
+              <Nav.Link as={NavLink} to="/admin/productos" onClick={cerrar}>
+                <FaTools className="me-1" aria-hidden="true" />
+                Gestión
+              </Nav.Link>
             )}
-          </ul>
+          </Nav>
 
           <div className="d-flex flex-wrap align-items-center gap-3 me-lg-3">
             <DolarWidget />
             <ThemeToggle />
             {usuario ? (
-              <span className="d-flex align-items-center gap-2">
-                <span className="text-suave small">
-                  Hola, <strong className="text-body">{usuario.nombre}</strong>
-                  {esAdmin && <span className="badge text-bg-info ms-1">admin</span>}
-                </span>
-                <button className="btn btn-sm btn-borde" onClick={cerrarSesion}>
-                  Salir
-                </button>
-              </span>
+              <NavDropdown
+                align="end"
+                id="menuUsuario"
+                title={
+                  <span>
+                    <FaUserCircle className="me-1" aria-hidden="true" />
+                    {usuario.nombre}
+                    {esAdmin && <span className="badge text-bg-info ms-1">admin</span>}
+                  </span>
+                }
+              >
+                <NavDropdown.Item as={Link} to="/perfil" onClick={cerrar}>
+                  <FaUserCircle className="me-2" aria-hidden="true" /> Mi perfil
+                </NavDropdown.Item>
+                {esAdmin && (
+                  <NavDropdown.Item as={Link} to="/admin/productos" onClick={cerrar}>
+                    <FaTools className="me-2" aria-hidden="true" /> Gestión de productos
+                  </NavDropdown.Item>
+                )}
+                <NavDropdown.Divider />
+                <NavDropdown.Item as="button" onClick={cerrarSesion}>
+                  <FaSignOutAlt className="me-2" aria-hidden="true" /> Cerrar sesión
+                </NavDropdown.Item>
+              </NavDropdown>
             ) : (
-              <NavLink className="nav-link" to="/login" onClick={cerrar}>
+              <Nav.Link as={NavLink} to="/login" onClick={cerrar}>
+                <FaSignInAlt className="me-1" aria-hidden="true" />
                 Ingresar
-              </NavLink>
+              </Nav.Link>
             )}
           </div>
-        </div>
-      </div>
-    </nav>
+        </Navbar.Collapse>
+      </Container>
+    </Navbar>
   )
 }
 

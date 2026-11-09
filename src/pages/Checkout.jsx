@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { FaCheckCircle } from 'react-icons/fa'
+import Seo from '../components/Seo.jsx'
 import { useAuth } from '../hooks/useAuth.js'
 import { useCart } from '../hooks/useCart.js'
 import { formatearPrecio } from '../utils/formato.js'
@@ -25,7 +27,7 @@ function Checkout() {
       <section className="seccion">
         <div className="container">
           <div className="vacio">
-            <p className="vacio__icono" aria-hidden="true">🎉</p>
+            <FaCheckCircle className="vacio__icono text-success" aria-hidden="true" />
             <h1 className="h3">¡Gracias por tu compra, {usuario.nombre}!</h1>
             <p className="text-suave mb-1">
               Orden <strong>{orden.numero}</strong> · {orden.unidades} productos · {formatearPrecio(orden.total)}
@@ -57,6 +59,7 @@ function Checkout() {
 
   return (
     <section className="seccion">
+      <Seo titulo="Confirmar compra" noIndex />
       <div className="container" style={{ maxWidth: 640 }}>
         <span className="seccion__eyebrow">Checkout</span>
         <h1 className="seccion__titulo">Confirmar compra</h1>
@@ -80,6 +83,7 @@ function Checkout() {
 
         <div className="d-flex flex-wrap gap-2">
           <button className="btn btn-acento" onClick={confirmar}>
+            <FaCheckCircle className="me-2" aria-hidden="true" />
             Confirmar compra (simulada)
           </button>
           <Link to="/carrito" className="btn btn-borde">

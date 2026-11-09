@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useForm, ValidationError } from '@formspree/react'
+import Seo from '../components/Seo.jsx'
 
 // Mismo formulario de Formspree que usaba el sitio HTML de Mundo Gaming.
 const FORMSPREE_ID = 'meenrgll'
@@ -14,6 +15,7 @@ function Contacto() {
 
   return (
     <section className="seccion">
+      <Seo titulo="Contacto" descripcion="Escribinos o visitá el showroom de Mundo Gaming en Av. Carabobo 25, CABA." />
       <div className="container">
         <span className="seccion__eyebrow">Hablemos</span>
         <h1 className="seccion__titulo">Formulario de contacto</h1>

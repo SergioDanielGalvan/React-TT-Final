@@ -437,7 +437,7 @@ a:hover { color: var(--acento-b); }
   border: 1px dashed var(--borde);
   border-radius: 20px;
 }
-.vacio__icono { font-size: 3rem; }
+.vacio__icono { font-size: 3rem; display: block; margin: 0 auto 1rem; color: var(--acento-a); }
 
 /* ---------- Reseñas (Grid) ---------- */
 .grilla-resenas {
@@ -767,3 +767,44 @@ a:focus-visible, button:focus-visible, .form-control:focus-visible {
   color: var(--texto-suave);
   font-size: 0.85rem;
 }
+
+/* ---------- Entrega final: búsqueda, paginador, perfil, toasts ---------- */
+.buscador { max-width: 560px; }
+.buscador .input-group-text,
+.admin-buscador .input-group-text {
+  background: var(--superficie-2);
+  border-color: var(--borde);
+  color: var(--texto-suave);
+}
+
+.mg-paginador {
+  --bs-pagination-bg: var(--superficie);
+  --bs-pagination-border-color: var(--borde);
+  --bs-pagination-color: var(--texto);
+  --bs-pagination-hover-bg: var(--superficie-2);
+  --bs-pagination-hover-color: var(--acento-a);
+  --bs-pagination-hover-border-color: var(--borde);
+  --bs-pagination-focus-box-shadow: 0 0 0 0.2rem rgba(34, 211, 238, 0.35);
+  --bs-pagination-active-bg: var(--acento-a);
+  --bs-pagination-active-border-color: var(--acento-a);
+  --bs-pagination-active-color: var(--sobre-acento);
+  --bs-pagination-disabled-bg: var(--superficie);
+  --bs-pagination-disabled-border-color: var(--borde);
+  flex-wrap: wrap;
+}
+
+.mg-nav .dropdown-toggle { color: var(--texto); font-weight: 500; }
+.mg-nav .dropdown-menu {
+  background: var(--superficie);
+  border-color: var(--borde);
+  box-shadow: var(--sombra);
+}
+
+.mg-card-perfil {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 18px;
+}
+.perfil__avatar { font-size: 4rem; color: var(--acento-a); }
+
+.Toastify__toast { font-family: inherit; border-radius: 12px; }

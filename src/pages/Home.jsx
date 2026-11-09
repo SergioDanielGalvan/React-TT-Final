@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import BrandsSlider from '../components/BrandsSlider.jsx'
 import HeroCarousel from '../components/HeroCarousel.jsx'
+import Seo from '../components/Seo.jsx'
 import ItemListContainer from './ItemListContainer.jsx'
 import resenas from '../data/resenas.json'
 
@@ -16,6 +17,7 @@ function Estrellas({ cantidad }) {
 function Home() {
   return (
     <>
+      <Seo />
       <BrandsSlider />
 
       <section className="pt-4">

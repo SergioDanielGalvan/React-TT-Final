@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { FaMoon, FaSun } from 'react-icons/fa'
 
 const CLAVE = 'mg-tema'
 
@@ -33,7 +34,7 @@ function ThemeToggle() {
       aria-label={oscuro ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
       title={oscuro ? 'Modo claro' : 'Modo oscuro'}
     >
-      {oscuro ? '☀️' : '🌙'}
+      {oscuro ? <FaSun aria-hidden="true" /> : <FaMoon aria-hidden="true" />}
     </button>
   )
 }

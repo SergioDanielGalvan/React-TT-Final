@@ -1,20 +1,20 @@
 {
-  "name": "pre-entrega",
+  "name": "tp-react-final",
   "version": "1.0.0",
   "private": true,
-  "description": "Pre entrega TT React",
+  "description": "Entrega final React · Talento Tech — e-commerce Mundo Gaming",
   "keywords": [
     "React",
     "+",
     "Vite"
   ],
-  "homepage": "https://github.com/SergioDanielGalvan/React-TT-PreEntrega#readme",
+  "homepage": "https://github.com/SergioDanielGalvan/TP-React-Final#readme",
   "bugs": {
-    "url": "https://github.com/SergioDanielGalvan/React-TT-PreEntrega/issues"
+    "url": "https://github.com/SergioDanielGalvan/TP-React-Final/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SergioDanielGalvan/React-TT-PreEntrega.git"
+    "url": "git+https://github.com/SergioDanielGalvan/TP-React-Final.git"
   },
   "license": "MIT",
   "author": "Sergio Daniel Galván",
@@ -24,15 +24,20 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "hash": "node scripts/hash-password.mjs"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@formspree/react": "^3.0.0",
     "bootstrap": "^5.3.8",
+    "firebase": "^12.19.0",
     "react": "^19.2.8",
+    "react-bootstrap": "^2.10.10",
     "react-dom": "^19.2.8",
-    "react-router-dom": "^7.18.4"
+    "react-helmet-async": "^3.0.0",
+    "react-icons": "^5.7.0",
+    "react-router-dom": "^7.18.4",
+    "react-toastify": "^11.2.0",
+    "styled-components": "^6.6.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

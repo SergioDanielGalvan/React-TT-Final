@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { FaSearch } from 'react-icons/fa'
 import ItemDetail from '../components/ItemDetail.jsx'
 import { Cargando, ErrorCarga } from '../components/Estado.jsx'
-import { RUTA_PRODUCTOS } from '../utils/api.js'
-import { aplicarCambios } from '../utils/catalogo.js'
+import Seo from '../components/Seo.jsx'
+import { obtenerProducto } from '../services/productos.js'
 
-/** Lee :id de la URL, busca ese producto y muestra <ItemDetail />. */
+/** Lee :id de la URL, busca ese producto en Firestore y muestra <ItemDetail />. */
 function ItemDetailContainer() {
   const { id } = useParams()
   const [producto, setProducto] = useState(null)
@@ -14,39 +15,52 @@ function ItemDetailContainer() {
   const [intento, setIntento] = useState(0)
 
   useEffect(() => {
-    const controller = new AbortController()
+    let activo = true
 
-    const cargar = async () => {
-      setCargando(true)
-      setError(null)
-      try {
-        const respuesta = await fetch(RUTA_PRODUCTOS, { signal: controller.signal })
-        if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`)
-        const datos = await respuesta.json()
-        setProducto(aplicarCambios(datos).find((p) => p.id === id) ?? null)
-      } catch (err) {
-        if (err.name !== 'AbortError') setError('No se pudo cargar el producto.')
-      } finally {
-        if (!controller.signal.aborted) setCargando(false)
-      }
+    obtenerProducto(id)
+      .then((p) => {
+        if (!activo) return
+        setProducto(p)
+        setError(null)
+      })
+      .catch((err) => {
+        console.error(err)
+        if (activo) setError('No se pudo cargar el producto.')
+      })
+      .finally(() => {
+        if (activo) setCargando(false)
+      })
+
+    return () => {
+      activo = false
     }
-
-    cargar()
-    return () => controller.abort()
   }, [id, intento])
+
+  const reintentar = () => {
+    setCargando(true)
+    setIntento((n) => n + 1)
+  }
 
   return (
     <section className="seccion">
+      {producto && (
+        <Seo
+          titulo={producto.titulo}
+          descripcion={`${producto.categoria}: ${producto.titulo}. ${producto.specs?.slice(0, 3).join(' · ')}`}
+          imagen={producto.imagen}
+        />
+      )}
       <div className="container">
         {cargando ? (
           <Cargando texto="Cargando producto…" />
         ) : error ? (
-          <ErrorCarga mensaje={error} onReintentar={() => setIntento((n) => n + 1)} />
+          <ErrorCarga mensaje={error} onReintentar={reintentar} />
         ) : producto ? (
           <ItemDetail producto={producto} />
         ) : (
           <div className="vacio">
-            <p className="vacio__icono" aria-hidden="true">🔍</p>
+            <Seo titulo="Producto no encontrado" noIndex />
+            <FaSearch className="vacio__icono" aria-hidden="true" />
             <h1 className="h3">Producto no encontrado</h1>
             <p className="text-suave">El producto que buscás no existe o ya no está disponible.</p>
             <Link to="/productos" className="btn btn-acento">

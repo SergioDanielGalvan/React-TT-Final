@@ -1,19 +1,23 @@
+import { Row, Col } from 'react-bootstrap'
 import Item from './Item.jsx'
 
-/** Grilla responsive que renderiza un <Item /> por producto. */
-function ItemList({ productos, columnas = 'col-12 col-sm-6 col-lg-4 col-xl-3', marcarDestacados = false }) {
+/**
+ * Grilla responsive con React-Bootstrap: 1 columna en celular,
+ * 2 en tablet, 3 en notebook y 4 en pantallas grandes.
+ */
+function ItemList({ productos, columnas = { xs: 12, sm: 6, lg: 4, xl: 3 }, marcarDestacados = false, vacio }) {
   if (productos.length === 0) {
-    return <p className="estado">No hay productos en esta categoría.</p>
+    return <p className="estado">{vacio ?? 'No hay productos para mostrar.'}</p>
   }
 
   return (
-    <div className="row g-4">
+    <Row className="g-4">
       {productos.map((producto) => (
-        <div className={columnas} key={producto.id}>
+        <Col key={producto.id} {...columnas}>
           <Item {...producto} marcarDestacado={marcarDestacados} />
-        </div>
+        </Col>
       ))}
-    </div>
+    </Row>
   )
 }
 

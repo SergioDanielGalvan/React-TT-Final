@@ -1,24 +1,28 @@
-/** Mensajes de carga y error reutilizables. */
+import { Alert, Button, Spinner } from 'react-bootstrap'
+import { FaRedo, FaExclamationCircle } from 'react-icons/fa'
+
+/** Indicador de carga (Spinner de React-Bootstrap). */
 export function Cargando({ texto = 'Cargando…' }) {
   return (
     <div className="estado" role="status">
-      <div className="spinner-rgb" aria-hidden="true" />
+      <Spinner animation="border" variant="info" className="mb-3" aria-hidden="true" />
       <p className="mb-0">{texto}</p>
     </div>
   )
 }
 
+/** Mensaje de error con botón para reintentar. */
 export function ErrorCarga({ mensaje, onReintentar }) {
   return (
-    <div className="estado" role="alert">
-      <p className="fs-2 mb-2" aria-hidden="true">⚠️</p>
-      <p className="mb-1">{mensaje}</p>
+    <Alert variant="danger" className="text-center my-4">
+      <FaExclamationCircle className="fs-3 mb-2" aria-hidden="true" />
+      <p className="mb-1 fw-semibold">{mensaje}</p>
       <small className="d-block mb-3">Verificá tu conexión o volvé a intentar.</small>
       {onReintentar && (
-        <button className="btn btn-borde btn-sm" onClick={onReintentar}>
-          Reintentar
-        </button>
+        <Button variant="outline-danger" size="sm" onClick={onReintentar}>
+          <FaRedo className="me-1" aria-hidden="true" /> Reintentar
+        </Button>
       )}
-    </div>
+    </Alert>
   )
 }

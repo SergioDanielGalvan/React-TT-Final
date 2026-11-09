@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { FaArrowLeft, FaCartPlus, FaExternalLinkAlt } from 'react-icons/fa'
+import { toast } from 'react-toastify'
 import ItemCount from './ItemCount.jsx'
 import { useCart } from '../hooks/useCart.js'
 import { useDolar } from '../hooks/useDolar.js'
@@ -16,6 +18,7 @@ function ItemDetail({ producto }) {
 
   const handleAgregar = () => {
     addToCart(producto, cantidad)
+    toast.success(`Agregaste ${cantidad} × ${producto.titulo} al carrito.`)
     setAgregado(true)
     setCantidad(1)
   }
@@ -49,7 +52,7 @@ function ItemDetail({ producto }) {
           {producto.url && (
             <p>
               <a href={producto.url} target="_blank" rel="noopener noreferrer">
-                Ver ficha en el sitio del fabricante ↗
+                Ver ficha en el sitio del fabricante <FaExternalLinkAlt className="ms-1" aria-hidden="true" />
               </a>
             </p>
           )}
@@ -57,6 +60,7 @@ function ItemDetail({ producto }) {
           <div className="d-flex flex-wrap align-items-center gap-3 mt-4">
             <ItemCount cantidad={cantidad} setCantidad={setCantidad} />
             <button className="btn btn-acento" onClick={handleAgregar}>
+              <FaCartPlus className="me-2" aria-hidden="true" />
               Agregar al carrito
             </button>
           </div>
@@ -72,7 +76,7 @@ function ItemDetail({ producto }) {
 
           <p className="mt-4 mb-0">
             <Link to="/productos" className="text-suave">
-              ← Volver al catálogo
+              <FaArrowLeft className="me-1" aria-hidden="true" /> Volver al catálogo
             </Link>
           </p>
         </div>

@@ -9,6 +9,8 @@ import ItemDetailContainer from './pages/ItemDetailContainer.jsx'
 import Cart from './pages/Cart.jsx'
 import Checkout from './pages/Checkout.jsx'
 import Login from './pages/Login.jsx'
+import Registro from './pages/Registro.jsx'
+import Perfil from './pages/Perfil.jsx'
 import Contacto from './pages/Contacto.jsx'
 import AdminProductos from './pages/admin/AdminProductos.jsx'
 import ProductoForm from './pages/admin/ProductoForm.jsx'
@@ -28,8 +30,9 @@ function App() {
               <Route path="/carrito" element={<Cart />} />
               <Route path="/contacto" element={<Contacto />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/registro" element={<Registro />} />
 
-              {/* Ruta protegida: solo usuarios con sesión iniciada */}
+              {/* Rutas protegidas: solo usuarios con sesión iniciada */}
               <Route
                 path="/checkout"
                 element={
@@ -38,8 +41,16 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/perfil"
+                element={
+                  <ProtectedRoute>
+                    <Perfil />
+                  </ProtectedRoute>
+                }
+              />
 
-              {/* CRUD de productos: solo cuentas con rol "admin" */}
+              {/* Panel de gestión (CRUD): solo cuentas con rol "admin" */}
               <Route
                 path="/admin/productos"
                 element={

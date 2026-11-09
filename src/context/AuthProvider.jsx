@@ -1,72 +1,109 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import {
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+  updateProfile,
+} from 'firebase/auth'
+import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { AuthContext } from './AuthContext.js'
-import usuarios from '../data/usuarios.json'
-import { verificarPassword } from '../utils/password.js'
+import { auth, db } from '../firebase/config.js'
 
-const CLAVE_SESION = 'mg-sesion'
-const RE_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+/** Mensajes en castellano para los códigos de error de Firebase Auth. */
+function mensajeAuth(err) {
+  switch (err?.code) {
+    case 'auth/invalid-email':
+      return 'El correo no es válido.'
+    case 'auth/invalid-credential':
+    case 'auth/wrong-password':
+    case 'auth/user-not-found':
+      return 'Correo o contraseña incorrectos.'
+    case 'auth/email-already-in-use':
+      return 'Ya existe una cuenta con ese correo. Probá ingresar.'
+    case 'auth/weak-password':
+      return 'La contraseña debe tener al menos 6 caracteres.'
+    case 'auth/too-many-requests':
+      return 'Demasiados intentos. Esperá unos minutos y volvé a probar.'
+    case 'auth/network-request-failed':
+      return 'Sin conexión con el servidor de autenticación.'
+    default:
+      return 'No se pudo completar la operación. Intentá de nuevo.'
+  }
+}
 
-function leerSesion() {
+/** Lee el perfil del usuario (nombre y rol) en Firestore: usuarios/{uid}. */
+async function leerPerfil(cuenta) {
+  let perfil = null
   try {
-    const raw = sessionStorage.getItem(CLAVE_SESION)
-    return raw ? JSON.parse(raw) : null
-  } catch {
-    return null
+    const snap = await getDoc(doc(db, 'usuarios', cuenta.uid))
+    if (snap.exists()) perfil = snap.data()
+  } catch (err) {
+    console.error('No se pudo leer el perfil', err)
+  }
+  return {
+    uid: cuenta.uid,
+    correo: cuenta.email,
+    nombre: perfil?.nombre || cuenta.displayName || cuenta.email.split('@')[0],
+    rol: perfil?.rol === 'admin' ? 'admin' : 'cliente',
   }
 }
 
 /**
- * Sesión simulada (sin servidor):
- * - Las cuentas de src/data/usuarios.json están "hardcodeadas" con la
- *   contraseña hasheada (PBKDF2 + sal, ver utils/password.js): si el correo
- *   coincide, se hashea lo que escribió el usuario y se compara con el JSON.
- * - Cualquier otro correo válido con 6+ caracteres entra como cliente.
- * La sesión vive en sessionStorage: se cierra al cerrar la pestaña.
- *
- * ⚠️ El JSON con los hashes viaja dentro del JavaScript del sitio: el hash
- * no se puede revertir, pero una contraseña débil se puede adivinar probando.
- * En un sistema real el login lo valida un backend.
+ * Sesión con Firebase Authentication (correo y contraseña).
+ * - La contraseña la guarda y verifica Firebase: nunca pasa por nuestro código.
+ * - El rol ("admin" o "cliente") vive en Firestore, en usuarios/{uid}.
+ *   Al registrarse todos son "cliente"; un admin se asigna desde la consola
+ *   de Firebase (las reglas no dejan que un usuario cambie su propio rol).
+ * - onAuthStateChanged mantiene la sesión al recargar la página.
  */
 function AuthProvider({ children }) {
-  const [usuario, setUsuario] = useState(leerSesion)
+  const [usuario, setUsuario] = useState(null)
+  const [cargando, setCargando] = useState(true)
 
-  const login = async (correoIngresado, password) => {
-    const correo = correoIngresado.trim().toLowerCase()
-    if (!RE_CORREO.test(correo)) throw new Error('Ingresá un correo válido.')
+  useEffect(() => {
+    const desuscribir = onAuthStateChanged(auth, async (cuenta) => {
+      setUsuario(cuenta ? await leerPerfil(cuenta) : null)
+      setCargando(false)
+    })
+    return desuscribir
+  }, [])
 
-    const cuenta = usuarios.find((u) => u.correo.toLowerCase() === correo)
-    let sesion
-    if (cuenta) {
-      const ok = await verificarPassword(password, cuenta)
-      if (!ok) throw new Error('Contraseña incorrecta.')
-      sesion = { correo: cuenta.correo, nombre: cuenta.nombre, rol: cuenta.rol }
-    } else {
-      if (password.length < 6) throw new Error('La contraseña debe tener al menos 6 caracteres.')
-      sesion = { correo, nombre: correo.split('@')[0], rol: 'cliente' }
-    }
-
+  const login = async (correo, password) => {
     try {
-      sessionStorage.setItem(CLAVE_SESION, JSON.stringify(sesion))
-    } catch {
-      /* sin storage: la sesión dura mientras no se recargue */
+      const { user } = await signInWithEmailAndPassword(auth, correo.trim(), password)
+      const perfil = await leerPerfil(user)
+      setUsuario(perfil)
+      return perfil
+    } catch (err) {
+      throw new Error(mensajeAuth(err), { cause: err })
     }
-    setUsuario(sesion)
-    return sesion
   }
 
-  const logout = () => {
+  const registrar = async (nombre, correo, password) => {
     try {
-      sessionStorage.removeItem(CLAVE_SESION)
-    } catch {
-      /* nada que limpiar */
+      const { user } = await createUserWithEmailAndPassword(auth, correo.trim(), password)
+      await updateProfile(user, { displayName: nombre })
+      await setDoc(doc(db, 'usuarios', user.uid), {
+        nombre,
+        correo: user.email,
+        rol: 'cliente',
+        creado: serverTimestamp(),
+      })
+      const perfil = { uid: user.uid, correo: user.email, nombre, rol: 'cliente' }
+      setUsuario(perfil)
+      return perfil
+    } catch (err) {
+      throw new Error(mensajeAuth(err), { cause: err })
     }
-    setUsuario(null)
   }
+
+  const logout = () => signOut(auth)
 
   const esAdmin = usuario?.rol === 'admin'
 
   return (
-    <AuthContext.Provider value={{ usuario, esAdmin, login, logout }}>
+    <AuthContext.Provider value={{ usuario, cargando, esAdmin, login, registrar, logout }}>
       {children}
     </AuthContext.Provider>
   )

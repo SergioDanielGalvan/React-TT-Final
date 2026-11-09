@@ -1,8 +1,17 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { Cargando } from '../../components/Estado.jsx'
-import { useCatalogo } from '../../hooks/useCatalogo.js'
-import { actualizarProducto, crearProducto, generarId } from '../../utils/catalogo.js'
+import { Spinner } from 'react-bootstrap'
+import { FaArrowLeft, FaSave, FaTimes } from 'react-icons/fa'
+import { toast } from 'react-toastify'
+import { Cargando, ErrorCarga } from '../../components/Estado.jsx'
+import Seo from '../../components/Seo.jsx'
+import {
+  actualizarProducto,
+  crearProducto,
+  generarId,
+  mensajeFirestore,
+  obtenerProducto,
+} from '../../services/productos.js'
 import { IMGBB_KEY, TAMANO_MAXIMO_MB, subirImagen, validarImagen } from '../../utils/imgbb.js'
 
 const CATEGORIAS = ['Placas Madre', 'Tarjetas de Video', 'Gabinetes']
@@ -59,8 +68,11 @@ function validar(form, archivo) {
 function FormularioProducto({ id }) {
   const esEdicion = Boolean(id)
   const navigate = useNavigate()
-  const { productos, cargando } = useCatalogo()
-  const original = esEdicion ? productos.find((p) => p.id === id) : null
+  // En edición, el producto se lee de Firestore.
+  const [original, setOriginal] = useState(null)
+  const [cargando, setCargando] = useState(esEdicion)
+  const [errorCarga, setErrorCarga] = useState(null)
+  const [intento, setIntento] = useState(0)
 
   const [form, setForm] = useState(FORM_VACIO)
   const [cargado, setCargado] = useState(!esEdicion)
@@ -77,6 +89,21 @@ function FormularioProducto({ id }) {
     setCargado(true)
   }
 
+  useEffect(() => {
+    if (!esEdicion) return
+    let activo = true
+    obtenerProducto(id)
+      .then((p) => activo && setOriginal(p))
+      .catch((err) => {
+        console.error(err)
+        if (activo) setErrorCarga('No se pudo cargar el producto.')
+      })
+      .finally(() => activo && setCargando(false))
+    return () => {
+      activo = false
+    }
+  }, [esEdicion, id, intento])
+
   // Libera la URL temporal de la vista previa.
   useEffect(() => {
     return () => {
@@ -85,6 +112,22 @@ function FormularioProducto({ id }) {
   }, [preview])
 
   if (esEdicion && cargando) return <Cargando texto="Cargando producto…" />
+  if (esEdicion && errorCarga) {
+    return (
+      <section className="seccion">
+        <div className="container">
+          <ErrorCarga
+            mensaje={errorCarga}
+            onReintentar={() => {
+              setErrorCarga(null)
+              setCargando(true)
+              setIntento((n) => n + 1)
+            }}
+          />
+        </div>
+      </section>
+    )
+  }
   if (esEdicion && !original) {
     return (
       <section className="seccion">
@@ -131,15 +174,18 @@ function FormularioProducto({ id }) {
         url: form.url.trim(),
         imagen,
         specs: form.specs.split('\n').map((s) => s.trim()).filter(Boolean),
-        ...(form.destacado && { destacado: true }),
+        destacado: form.destacado,
       }
 
-      if (esEdicion) actualizarProducto(producto)
-      else crearProducto(producto)
+      if (esEdicion) await actualizarProducto(producto)
+      else await crearProducto(producto)
 
+      toast.success(esEdicion ? 'Cambios guardados.' : `"${producto.titulo}" se dio de alta.`)
       navigate('/admin/productos')
     } catch (err) {
-      setErrorGeneral(err.message)
+      console.error(err)
+      // Errores de Firestore traen "code"; los de ImgBB, un mensaje propio.
+      setErrorGeneral(err.code ? mensajeFirestore(err, 'guardar el producto') : err.message)
       setGuardando(false)
     }
   }
@@ -149,8 +195,11 @@ function FormularioProducto({ id }) {
 
   return (
     <section className="seccion">
+      <Seo titulo={esEdicion ? 'Editar producto' : 'Nuevo producto'} noIndex />
       <div className="container" style={{ maxWidth: 820 }}>
-        <Link to="/admin/productos" className="text-suave">← Volver al panel</Link>
+        <Link to="/admin/productos" className="text-suave">
+          <FaArrowLeft className="me-1" aria-hidden="true" /> Volver al panel
+        </Link>
         <h1 className="seccion__titulo mt-2">{esEdicion ? 'Editar producto' : 'Nuevo producto'}</h1>
         {esEdicion && <p className="text-suave small">ID: <code>{id}</code></p>}
 
@@ -238,11 +287,21 @@ function FormularioProducto({ id }) {
 
           <div className="d-flex gap-2">
             <button type="submit" className="btn btn-acento" disabled={guardando}>
-              {guardando
-                ? archivo ? 'Subiendo imagen…' : 'Guardando…'
-                : esEdicion ? 'Guardar cambios' : 'Dar de alta'}
+              {guardando ? (
+                <>
+                  <Spinner size="sm" className="me-2" aria-hidden="true" />
+                  {archivo ? 'Subiendo imagen…' : 'Guardando…'}
+                </>
+              ) : (
+                <>
+                  <FaSave className="me-2" aria-hidden="true" />
+                  {esEdicion ? 'Guardar cambios' : 'Dar de alta'}
+                </>
+              )}
             </button>
-            <Link to="/admin/productos" className="btn btn-borde">Cancelar</Link>
+            <Link to="/admin/productos" className="btn btn-borde">
+              <FaTimes className="me-1" aria-hidden="true" /> Cancelar
+            </Link>
           </div>
         </form>
       </div>
