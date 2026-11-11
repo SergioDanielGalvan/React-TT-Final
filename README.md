@@ -3,8 +3,8 @@
 E-commerce de hardware gamer (placas madre, tarjetas de video y gabinetes) hecho con **React + Vite**,
 con **Firebase** (Authentication + Cloud Firestore) como backend.
 
-- **Sitio publicado:** _(se completa al publicar en Vercel)_
-- **Repositorio:** <https://github.com/SergioDanielGalvan/TP-React-Final>
+- **Sitio publicado:** <https://react-tt-final-pi.vercel.app/>
+- **Repositorio:** <https://github.com/SergioDanielGalvan/React-TT-Final>
 - **Pre-entrega:** [React-TT-PreEntrega](https://github.com/SergioDanielGalvan/React-TT-PreEntrega) · <https://react-tt-pre-entrega.vercel.app/>
 - **Autor:** Sergio Daniel Galván
 
@@ -19,8 +19,8 @@ con ideas del TP grupal **MocoSoft** ([front_tp2_grupal](https://github.com/aler
 Requisitos: **Node.js 20 o superior** y npm.
 
 ```bash
-git clone https://github.com/SergioDanielGalvan/TP-React-Final.git
-cd TP-React-Final
+git clone https://github.com/SergioDanielGalvan/React-TT-Final.git
+cd React-TT-Final
 npm install
 cp .env.example .env      # en Windows: copy .env.example .env
 # completá .env con los datos de Firebase y la key de ImgBB (ver abajo)
@@ -169,7 +169,7 @@ src/
 
 ## Deploy
 
-Publicado en **Vercel** desde la rama `main`. `vercel.json` (y `public/_redirects` para Netlify)
+Publicado en **Vercel** (<https://react-tt-final-pi.vercel.app/>) desde la rama `main`; cada push a `main` genera un deploy nuevo. El dominio `react-tt-final-pi.vercel.app` está agregado en Firebase → Authentication → Dominios autorizados. `vercel.json` (y `public/_redirects` para Netlify)
 redirigen todas las rutas a `index.html`, así no dan 404 al recargar.
 
 ## Tecnologías
