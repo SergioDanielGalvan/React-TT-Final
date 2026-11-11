@@ -166,13 +166,13 @@ export const Ficha = styled.div`
   }
 `
 
-/* En computadoras: la hoja pasa sola al apoyar el mouse sobre la card. */
+/* En computadoras: la hoja pasa sola al apoyar el mouse sobre la foto. */
 export const conHover = css`
   @media (hover: hover) and (pointer: fine) {
-    &:hover ${Hoja}, &:focus-within ${Hoja} {
+    ${Media}:hover ${Hoja}, ${Media}:focus-within ${Hoja} {
       ${vuelta}
     }
-    &:hover ${Esquina}, &:focus-within ${Esquina} {
+    ${Media}:hover ${Esquina}, ${Media}:focus-within ${Esquina} {
       opacity: 0;
     }
     ${Esquina}:hover {
@@ -186,7 +186,7 @@ export const conHover = css`
     ${Hoja} {
       transition: opacity 0.2s ease;
     }
-    &:hover ${Hoja}, &:focus-within ${Hoja} {
+    ${Media}:hover ${Hoja}, ${Media}:focus-within ${Hoja} {
       transform: none;
       opacity: 0;
     }

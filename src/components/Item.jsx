@@ -23,7 +23,7 @@ import {
  *
  * Efecto "pasar la hoja": la foto es una página que gira sobre su borde
  * izquierdo y deja ver la ficha técnica completa. En computadora se activa
- * al pasar el mouse; en celular, tocando la esquina doblada.
+ * al pasar el mouse sobre la foto; en celular, tocando la esquina doblada.
  *
  * Con marcarDestacado, los productos "destacado" llevan una estrella
  * (se usa en el catálogo; en la fila de destacados de Inicio no hace falta).
@@ -33,10 +33,10 @@ function Item({ id, titulo, categoria, precio, imagen, specs = [], destacado = f
   const conEstrella = marcarDestacado && destacado
 
   return (
-    // Al sacar el mouse la hoja vuelve a su lugar (con el dedo no aplica:
-    // en celular se cierra tocando otra vez la esquina o el texto).
-    <Tarjeta $destacado={conEstrella} onPointerLeave={(e) => e.pointerType === 'mouse' && setVuelta(false)}>
-      <Media>
+    <Tarjeta $destacado={conEstrella}>
+      {/* Al sacar el mouse de la foto la hoja vuelve a su lugar (con el dedo
+          no aplica: en celular se cierra tocando otra vez la esquina o el texto). */}
+      <Media onPointerLeave={(e) => e.pointerType === 'mouse' && setVuelta(false)}>
         {/* Debajo de la hoja: ficha técnica completa */}
         <Ficha aria-hidden={!vuelta}>
           <h4>Ficha técnica</h4>
