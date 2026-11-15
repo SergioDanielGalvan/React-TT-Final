@@ -9,8 +9,7 @@ con **Firebase** (Authentication + Cloud Firestore) como backend.
 - **Autor:** Sergio Daniel Galván
 
 Es la migración a React del sitio HTML/JS del proyecto final de Front
-([TPFinal-Front-TalentoTech-New](https://github.com/SergioDanielGalvan/TPFinal-Front-TalentoTech-New)),
-con ideas del TP grupal **MocoSoft** ([front_tp2_grupal](https://github.com/alerod88/front_tp2_grupal)).
+([TPFinal-Front-TalentoTech-New](https://github.com/SergioDanielGalvan/TPFinal-Front-TalentoTech-New)).
 
 ---
 
