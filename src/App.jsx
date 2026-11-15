@@ -14,6 +14,7 @@ import Perfil from './pages/Perfil.jsx'
 import Contacto from './pages/Contacto.jsx'
 import AdminProductos from './pages/admin/AdminProductos.jsx'
 import ProductoForm from './pages/admin/ProductoForm.jsx'
+import AdminUsuarios from './pages/admin/AdminUsuarios.jsx'
 import NotFound from './pages/NotFound.jsx'
 
 function App() {
@@ -72,6 +73,15 @@ function App() {
                 element={
                   <ProtectedRoute soloAdmin>
                     <ProductoForm />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/admin/usuarios"
+                element={
+                  <ProtectedRoute soloAdmin>
+                    <AdminUsuarios />
                   </ProtectedRoute>
                 }
               />

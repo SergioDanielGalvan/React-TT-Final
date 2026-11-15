@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { Container, Nav, Navbar, NavDropdown } from 'react-bootstrap'
-import { FaBoxOpen, FaEnvelope, FaHome, FaSignInAlt, FaSignOutAlt, FaTools, FaUserCircle } from 'react-icons/fa'
+import { FaBoxOpen, FaEnvelope, FaHome, FaSignInAlt, FaSignOutAlt, FaTools, FaUserCircle, FaUsers } from 'react-icons/fa'
 import CartWidget from '../CartWidget.jsx'
 import DolarWidget from '../DolarWidget.jsx'
 import ThemeToggle from '../ThemeToggle.jsx'
@@ -76,9 +76,14 @@ function NavBar() {
                   <FaUserCircle className="me-2" aria-hidden="true" /> Mi perfil
                 </NavDropdown.Item>
                 {esAdmin && (
-                  <NavDropdown.Item as={Link} to="/admin/productos" onClick={cerrar}>
-                    <FaTools className="me-2" aria-hidden="true" /> Gestión de productos
-                  </NavDropdown.Item>
+                  <>
+                    <NavDropdown.Item as={Link} to="/admin/productos" onClick={cerrar}>
+                      <FaTools className="me-2" aria-hidden="true" /> Gestión de productos
+                    </NavDropdown.Item>
+                    <NavDropdown.Item as={Link} to="/admin/usuarios" onClick={cerrar}>
+                      <FaUsers className="me-2" aria-hidden="true" /> Gestión de usuarios
+                    </NavDropdown.Item>
+                  </>
                 )}
                 <NavDropdown.Divider />
                 <NavDropdown.Item as="button" onClick={cerrarSesion}>

@@ -814,3 +814,13 @@ a:focus-visible, button:focus-visible, .form-control:focus-visible {
 .perfil__avatar { font-size: 4rem; color: var(--acento-a); }
 
 .Toastify__toast { font-family: inherit; border-radius: 12px; }
+
+/* Pestañas del panel de gestión (Productos | Usuarios) */
+.admin-tabs {
+  --bs-nav-tabs-border-color: var(--borde);
+  --bs-nav-tabs-link-active-bg: var(--superficie);
+  --bs-nav-tabs-link-active-color: var(--acento-a);
+  --bs-nav-tabs-link-active-border-color: var(--borde) var(--borde) var(--superficie);
+  --bs-nav-link-color: var(--texto-suave);
+  --bs-nav-link-hover-color: var(--acento-a);
+}

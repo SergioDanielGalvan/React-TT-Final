@@ -85,8 +85,10 @@ service cloud.firestore {
       allow read: if request.auth != null && (request.auth.uid == uid || esAdmin());
       allow create: if request.auth != null && request.auth.uid == uid
                     && request.resource.data.rol == 'cliente';
-      allow update: if request.auth != null && request.auth.uid == uid
-                    && request.resource.data.rol == resource.data.rol;
+      allow update: if (esAdmin() && request.auth.uid != uid)
+                    || (request.auth != null && request.auth.uid == uid
+                        && request.resource.data.rol == resource.data.rol);
+      allow delete: if request.auth != null && (request.auth.uid == uid || esAdmin());
     }
   }
 }
@@ -94,12 +96,28 @@ service cloud.firestore {
 
 - Cualquiera puede **ver** el catálogo; solo un **admin** puede crear, editar o borrar productos.
 - Nadie puede registrarse como admin ni cambiarse el rol a sí mismo.
+- Un **admin** puede ver todos los usuarios, cambiarles el rol y borrar sus datos (no los propios).
+- Cada usuario puede borrar su propio documento (al eliminar su cuenta desde *Mi perfil*).
 
 ### Crear el primer administrador
 
 1. Registrate en el sitio (`/registro`).
 2. En la consola de Firebase → Firestore → `usuarios` → tu documento → cambiá `rol` a `admin`.
 3. Cerrá sesión y volvé a ingresar: aparece el menú **Gestión**.
+
+### Gestión de usuarios
+
+En **Gestión → Usuarios** (`/admin/usuarios`) el admin ve los usuarios registrados, con buscador, y puede
+**pasar a admin / a cliente** o **eliminar** sus datos, siempre con un modal de confirmación. El alta la hace
+cada persona desde `/registro`.
+
+Firebase no permite borrar la **cuenta de acceso** de otra persona desde el navegador (requiere el Admin SDK).
+Por eso:
+
+- *Eliminar* desde el panel borra los datos del sitio (nombre y rol). Si esa persona vuelve a ingresar, su
+  documento se recrea automáticamente como cliente.
+- Cada usuario puede borrar su cuenta completa (acceso + datos + carrito) en **Mi perfil → Eliminar mi cuenta**.
+- Un admin puede borrar el acceso en la consola de Firebase → Authentication → Usuarios → ⋮ → Borrar cuenta.
 
 ### Carga inicial del catálogo
 
@@ -116,7 +134,8 @@ Las credenciales de prueba (admin y cliente) se entregan aparte; no están en el
 |---|-----------|------------|
 | 1 | **Carrito con Context API** (agregar, eliminar, vaciar) | `src/context/CartProvider.jsx` + hook `useCart`; persistente en `localStorage` |
 | 1 | **Autenticación** con Firebase (login y registro) | `src/context/AuthProvider.jsx`, `pages/Login.jsx`, `pages/Registro.jsx` |
-| 1 | **Rutas protegidas** | `components/ProtectedRoute.jsx`: `/checkout` y `/perfil` piden sesión; `/admin/...` pide rol admin (si no, 403) |
+| 1 | **Rutas protegidas** | `components/ProtectedRoute.jsx`: `/checkout` y `/perfil` piden sesión; `/admin/productos` y `/admin/usuarios` piden rol admin (si no, 403) |
+| 2 | **CRUD de usuarios** (admin) | `pages/admin/AdminUsuarios.jsx` + `src/services/usuarios.js`: listado, cambio de rol y baja |
 | 2 | **CRUD de productos** en Firestore | `src/services/productos.js` (getDocs, getDoc, setDoc, updateDoc, deleteDoc, writeBatch) |
 | 2 | Formulario controlado con **validaciones** | `pages/admin/ProductoForm.jsx`: nombre (3+ caracteres), precio > 0, al menos una característica, URL válida, imagen |
 | 2 | **Modal de confirmación** antes de eliminar | `components/ConfirmModal.jsx` (Modal de React-Bootstrap), usado en Gestión y en *Vaciar carrito* |
@@ -152,6 +171,7 @@ src/
   App.jsx                   rutas
   firebase/config.js        inicialización de Firebase (Auth + Firestore)
   services/productos.js     CRUD de productos en Firestore
+  services/usuarios.js      gestión de usuarios (rol y baja)
   context/                  CartContext/CartProvider, AuthContext/AuthProvider
   hooks/                    useCart, useAuth, useProductos, useDolar
   components/
@@ -160,7 +180,7 @@ src/
     Item, ItemList, ItemDetail, ItemCount, CartWidget, ConfirmModal, Estado, Seo, ProtectedRoute, ...
   pages/                    Home, ItemListContainer, ItemDetailContainer, Cart, Checkout,
                             Login, Registro, Perfil, Contacto, NotFound
-  pages/admin/              AdminProductos (listado), ProductoForm (alta/edición)
+  pages/admin/              AdminProductos (listado), ProductoForm (alta/edición), AdminUsuarios
   data/                     equipo, reseñas y marcas (JSON)
   utils/                    formato de precios, imgbb.js (subida de imágenes)
   styles/index.css          tema Mundo Gaming sobre Bootstrap 5

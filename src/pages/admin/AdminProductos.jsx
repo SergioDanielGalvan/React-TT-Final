@@ -6,6 +6,7 @@ import { toast } from 'react-toastify'
 import { Cargando, ErrorCarga } from '../../components/Estado.jsx'
 import ConfirmModal from '../../components/ConfirmModal.jsx'
 import Seo from '../../components/Seo.jsx'
+import AdminTabs from '../../components/AdminTabs.jsx'
 import { useProductos } from '../../hooks/useProductos.js'
 import { eliminarProducto, importarCatalogo, mensajeFirestore } from '../../services/productos.js'
 import { formatearPrecio } from '../../utils/formato.js'
@@ -96,6 +97,8 @@ function AdminProductos() {
             </Button>
           </div>
         </div>
+
+        <AdminTabs />
 
         <p className="text-suave small">
           Los cambios se guardan en <strong>Cloud Firestore</strong> y se ven al instante en el sitio publicado.
